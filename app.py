@@ -28,31 +28,41 @@ def home():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    # Load the data
-    data = request.get_json()
-    X = pd.DataFrame(data, columns=['Annual Income (k$)', 'Spending Score (1-100)'])
+    try:
+        # Load the data
+        data = request.files['files']
+        file_path = os.path.join(os.getcwd(), data.filename)
+        data.save(file_path)
+        print("Received data:", data)
+        
+        X = pd.DataFrame(data, columns=['Annual Income (k$)', 'Spending Score (1-100)'])
 
-    # Perform DBSCAN clustering
-    clusters = dbscan_clustering(X)
+        # Perform DBSCAN clustering
+        clusters = dbscan_clustering(X)
+        print("Clusters:", clusters)
 
-    # Visualize the clusters
-    plt.figure(figsize=(10, 6))
-    sns.scatterplot(x='Annual Income (k$)', y='Spending Score (1-100)', data=X, hue=clusters, palette='viridis')
-    plt.title('DBSCAN Clustering')
-    plt.xlabel('Annual Income (k$)')
-    plt.ylabel('Spending Score (1-100)')
-    plt.legend(title='Cluster')
+        # Visualize the clusters
+        plt.figure(figsize=(10, 6))
+        sns.scatterplot(x='Annual Income (k$)', y='Spending Score (1-100)', data=X, hue=clusters, palette='viridis')
+        plt.title('DBSCAN Clustering')
+        plt.xlabel('Annual Income (k$)')
+        plt.ylabel('Spending Score (1-100)')
+        plt.legend(title='Cluster')
 
-    # Save the plot
-    img_path = 'static/cluster_plots.png'
-    plt.savefig(img_path)
-    plt.close()
+        # Save the plot
+        img_path = 'static/cluster_plots.png'
+        plt.savefig(img_path)
+        plt.close()
 
-    response = {
-        'img_path': img_path
-    }
+        response = {
+            'img_path': img_path
+        }
 
-    return jsonify(response)
+        return jsonify(response)
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
