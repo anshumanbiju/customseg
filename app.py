@@ -1,3 +1,5 @@
+import os
+import io
 from flask import Flask, request, render_template, jsonify
 import numpy as np
 import pandas as pd
@@ -5,8 +7,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
-import os
-import io
 
 app = Flask(__name__)
 
@@ -32,15 +32,10 @@ def predict():
     try:
         # Load the data
         data = request.files['files']
-        file_path = os.path.join(os.getcwd(), data.filename)
-        data.save(file_path)
-        print("Received data:", data)
-        
-        X = pd.DataFrame(data, columns=['Annual Income (k$)', 'Spending Score (1-100)'])
+        X = pd.read_csv(data)
 
         # Perform DBSCAN clustering
-        clusters = dbscan_clustering(X)
-        print("Clusters:", clusters)
+        clusters = dbscan_clustering(X[['Annual Income (k$)', 'Spending Score (1-100)']])
 
         # Visualize the clusters
         plt.figure(figsize=(10, 6))
@@ -50,29 +45,19 @@ def predict():
         plt.ylabel('Spending Score (1-100)')
         plt.legend(title='Cluster')
 
-        # Save the plot
-        img_path = os.getcwd+'/cluster_plots.png'
+        # Save the plot in the static folder
+        img_path = os.path.join(app.static_folder, 'cluster_plots.png')
         plt.savefig(img_path)
-        # Converting Images to IOBytes
-        img_bytes = io.StringIO()
-        plt.savefig(img_bytes, format='svg')
-        img_bytes.seek(0)
 
-        # Converting to Context
-        img_bytes = img_bytes.getvalue()
-        context = {'images':img_bytes}
-        
         plt.close()
 
         response = {
-            'img_path': img_path
+            'img_path': '/static/cluster_plots.png'  # Return the path relative to the static folder
         }
-        response = context
         return jsonify(response)
     except Exception as e:
         print("Error:", e)
         return jsonify({'error': str(e)}), 500
-
 
 if __name__ == '__main__':
     app.run(debug=True)
