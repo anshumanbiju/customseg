@@ -6,6 +6,7 @@ import seaborn as sns
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 import os
+import io
 
 app = Flask(__name__)
 
@@ -50,14 +51,23 @@ def predict():
         plt.legend(title='Cluster')
 
         # Save the plot
-        img_path = 'static/cluster_plots.png'
+        img_path = os.getcwd+'/cluster_plots.png'
         plt.savefig(img_path)
+        # Converting Images to IOBytes
+        img_bytes = io.StringIO()
+        plt.savefig(img_bytes, format='svg')
+        img_bytes.seek(0)
+
+        # Converting to Context
+        img_bytes = img_bytes.getvalue()
+        context = {'images':img_bytes}
+        
         plt.close()
 
         response = {
             'img_path': img_path
         }
-
+        response = context
         return jsonify(response)
     except Exception as e:
         print("Error:", e)
