@@ -99,11 +99,15 @@
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === XMLHttpRequest.DONE) {
                     var response = JSON.parse(xhr.responseText);
+                    var imgPath = response.img_path;
 
                     var resultImg = document.createElement("img");
-                    resultImg.src = response.img_path; // Use the img_path from the response
-                    document.getElementById("results").innerHTML = ""; // Clear previous results
-                    document.getElementById("results").appendChild(resultImg);
+                    resultImg.src = imgPath; // Use the img_path from the response
+
+                    // Append the image to the results div
+                    var resultsDiv = document.getElementById("results");
+                    resultsDiv.innerHTML = ""; // Clear previous results
+                    resultsDiv.appendChild(resultImg);
 
                     spinner.style.display = "none";
                 }
@@ -112,13 +116,13 @@
     </script>
 </head>
 <body>
-    <h1>Customer Segmentation App</h1>
-    <form id="upload-form" onsubmit="handleSubmit(event)">
-        <label for="file-upload">Upload CSV file:</label>
-        <input type="file" id="file-upload">
-        <button type="submit">Submit</button>
-    </form>
-    <div id="spinner" class="spinner">Processing...</div>
-    <div id="results"></div>
+<h1>Customer Segmentation App</h1>
+<form id="upload-form" onsubmit="handleSubmit(event)" enctype="multipart/form-data">
+    <label for="file-upload">Upload CSV file:</label>
+    <input type="file" id="file-upload">
+    <button type="submit">Submit</button>
+</form>
+<div id="spinner" class="spinner">Processing...</div>
+<div id="results"></div>
 </body>
 </html>
