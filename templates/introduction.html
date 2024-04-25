@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Introduction to Customer Segmentation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .content {
+            margin-top: 20px;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #555;
+        }
+        .btn {
+            display: block;
+            margin: 20px auto;
+            text-align: center;
+        }
+        #spinner {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Introduction to Customer Segmentation</h1>
+        <div class="content">
+            <p>Customer segmentation is the process of dividing customers into groups based on common characteristics so companies can market to each group effectively and appropriately.</p>
+            <p>One popular method of segmentation is RFM analysis, which stands for Recency, Frequency, and Monetary Value. It helps to identify customers who are more likely to respond to promotions and also helps in customer retention.</p>
+            <p>RFM analysis involves analyzing three key factors:</p>
+            <ul>
+                <li><strong>Recency (R):</strong> How recently a customer has made a purchase.</li>
+                <li><strong>Frequency (F):</strong> How often a customer makes a purchase.</li>
+                <li><strong>Monetary Value (M):</strong> How much money a customer spends on purchases.</li>
+            </ul>
+        </div>
+        
+        <!-- Add the empty div here -->
+        <div id="results"></div>
+
+        <form id="upload-form" enctype="multipart/form-data">
+            <label for="file-upload">Upload CSV file:</label>
+            <input type="file" id="file-upload" name="files" accept=".csv"> <!-- Corrected ID here -->
+            <button type="button" onclick="handleSubmit()" class="btn">Go to Segmentation</button>
+        </form>
+        
+        <div id="spinner">Processing...</div>
+        
+    </div>
+
+    <script>
+        function handleSubmit() {
+            console.log("handleSubmit function executed.");
+            console.log("Form submitted.");
+            var fileInput = document.getElementById("file-upload");
+            var file = fileInput.files[0];
+            if (!file) {
+                alert("Please select a file.");
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append("files", file);
+
+            var spinner = document.getElementById("spinner");
+            spinner.style.display = "block";
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/predict");
+            xhr.send(formData);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        var response = JSON.parse(xhr.responseText);
+
+                        var resultImg = document.createElement("img");
+                        resultImg.src = response.img_path; // Use the img_path from the response
+
+                        // Get the "results" element
+                        var resultsDiv = document.getElementById("results");
+                        resultsDiv.innerHTML = ""; // Clear previous results
+                        resultsDiv.appendChild(resultImg);
+
+                        spinner.style.display = "none";
+
+                        console.log("Redirecting to segmentation page...");
+
+                        // Redirect to segmentation page
+                        window.location.href = "/segmentation"; // Assuming this is the route for the segmentation page in your Flask app
+                    } else {
+                        alert("Error processing the file.");
+                    }
+                }
+            };
+        }
+    </script>
+    
+</body>
+</html>

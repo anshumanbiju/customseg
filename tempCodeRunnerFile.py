@@ -1,46 +1,33 @@
-from flask import Flask, request, render_template, jsonify
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.cluster import DBSCAN
-from sklearn.preprocessing import StandardScaler
-import os
-import io
-
-app = Flask(__name__)
-
-def dbscan_clustering(X):
-    # Standardize the features
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-
-    # Apply DBSCAN clustering
-    eps = 0.4  # distance epsilon
-    min_samples = 4
-    dbscan = DBSCAN(eps=eps, min_samples=min_samples)
-    clusters = dbscan.fit_predict(X_scaled)
-
-    return clusters
-
-@app.route('/')
-def home():
-    return render_template('index.html')
-
-@app.route('/predict', methods=['POST'])
 def predict():
-    try:
+    try:    
         # Load the data
         data = request.files['files']
-        file_path = os.path.join(os.getcwd(), data.filename)
-        data.save(file_path)
-        print("Received data:", data)
-        
-        X = pd.DataFrame(data, columns=['Annual Income (k$)', 'Spending Score (1-100)'])
+        X = pd.read_csv(data)
+
+        # Extract file name and column names
+        filename = data.filename
+        column_names = X.columns.tolist()
 
         # Perform DBSCAN clustering
-        clusters = dbscan_clustering(X)
-        print("Clusters:", clusters)
+        clusters = dbscan_clustering(X[['Annual Income (k$)', 'Spending Score (1-100)']])
+
+        # Calculate silhouette score
+        silhouette_avg = silhouette_score(X, clusters)
+
+        # Get number of clusters
+        num_clusters = len(set(clusters)) - (1 if -1 in clusters else 0)
+
+        # Get cluster details
+        cluster_details = {}
+        for cluster_label in set(clusters):
+            if cluster_label != -1:  # Ignore noise points
+                cluster_points = X[clusters == cluster_label]
+                cluster_center = cluster_points.mean(axis=0)
+                cluster_size = len(cluster_points)
+                cluster_details[cluster_label] = {
+                    'center': cluster_center.tolist(),
+                    'size': cluster_size
+                }
 
         # Visualize the clusters
         plt.figure(figsize=(10, 6))
@@ -50,29 +37,27 @@ def predict():
         plt.ylabel('Spending Score (1-100)')
         plt.legend(title='Cluster')
 
-        # Save the plot
-        img_path = os.getcwd+'/cluster_plots.png'
+        # Save the plot in the static folder
+        img_path = os.path.join(app.static_folder, 'cluster_plots.png')
         plt.savefig(img_path)
-        # Converting Images to IOBytes
-        img_bytes = io.StringIO()
-        plt.savefig(img_bytes, format='svg')
-        img_bytes.seek(0)
 
-        # Converting to Context
-        img_bytes = img_bytes.getvalue()
-        context = {'images':img_bytes}
-        
         plt.close()
 
-        response = {
-            'img_path': img_path
+        # Prepare dataset object to pass to frontend
+        dataset = {
+            'filename': filename,
+            'column_names': column_names,
+            'values': X.values.tolist()  # Convert dataframe to list of lists
         }
-        response = context
+
+        response = {
+            'img_path': '/static/cluster_plots.png',  # Return the path relative to the static folder
+            'dataset': dataset,  # Pass the dataset object
+            'silhouette_score': silhouette_avg,
+            'num_clusters': num_clusters,
+            'cluster_details': cluster_details
+        }
         return jsonify(response)
     except Exception as e:
         print("Error:", e)
         return jsonify({'error': str(e)}), 500
-
-
-if __name__ == '__main__':
-    app.run(debug=True)

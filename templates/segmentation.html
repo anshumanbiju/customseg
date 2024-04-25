@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Customer Segmentation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #e1dfdf;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 36px;
+            color: #2c3e50;
+        }
+
+        .dataset {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .dataset table {
+            width: 80%;
+            margin: 0 auto;
+            border-collapse: collapse;
+        }
+
+        .dataset th, .dataset td {
+            padding: 8px;
+            border: 1px solid #dddddd;
+            text-align: left;
+        }
+
+        #result {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #result img {
+            margin-top: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            width: 80%; /* Adjust the width of the image */
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Customer Segmentation App</h1>
+    <div class="dataset">
+        <h2>Uploaded Dataset</h2>
+        {% if dataset %}
+        <!-- Display the uploaded dataset if available -->
+        <p>Filename: {{ dataset.filename }}</p>
+        <!-- Display the dataset table -->
+        <table>
+            <thead>
+                <tr>
+                    {% for column in dataset.column_names %}
+                    <th>{{ column }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in dataset.values %}
+                <tr>
+                    {% for value in row %}
+                    <td>{{ value }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <!-- Display a message if no dataset is uploaded -->
+        <p>No dataset uploaded.</p>
+        {% endif %}
+    </div>
+    
+    <div id="result">
+        <h2>Result</h2>
+        <!-- Display silhouette score if available -->
+        {% if silhouette_score is not none %}
+        <p>Silhouette Score: {{ silhouette_score }}</p>
+        <script>
+            console.log(`Silhouette Score: ${silhouette_score}`);
+        </script>
+        {% endif %}
+        <!-- Display number of clusters if available -->
+        {% if num_clusters is not none %}
+        <p>Number of Clusters: {{ num_clusters }}</p>
+        <script>
+            console.log(`Number of Clusters: ${num_clusters}`);
+        </script>
+        {% endif %}
+        <!-- Display cluster details if available -->
+        <div id="cluster-details">
+            {% for cluster_label, details in cluster_details.items() %}
+                <div class="cluster">
+                    <h3>Cluster {{ cluster_label }}</h3>
+                    <p>Center: {{ details.center }}</p>
+                    <p>Size: {{ details.size }}</p>
+                    <script>
+                        console.log(`Cluster ${cluster_label} - Center: ${details.center}`);
+                        console.log(`Cluster ${cluster_label} - Size: ${details.size}`);
+                    </script>
+                </div>
+            {% endfor %}
+        </div>
+        <!-- Display result image if available -->
+        {% if img_path %}
+        <img src="{{ img_path }}" alt="Result Image">
+        <script>
+            console.log("Image Path:", "{{ img_path }}");
+        </script>
+        {% endif %}
+    </div>
+</body>
+</html>
